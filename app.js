@@ -51,8 +51,11 @@ io.on('connection', function (socket) {
       timer = setTimeout(function () {
         calc = sysUsage.calculate();
         socket.emit('update', calc);
-        worker.save(calc, function (status) {
-          socket.emit('saveToDB', { status: status });
+        worker.save(calc, function (status, docs) {
+          socket.emit('saveToDB', { 
+            status: status,
+            docs: docs
+          });
         });
       }, data.time);
     } else {
