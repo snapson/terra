@@ -1,11 +1,10 @@
 var socket = io.connect('http://localhost:5353');
-var default_time = 30000;
+var default_time = 1000;// 30000;
 var UI = {
 	df: document.createDocumentFragment(),
 	cpu: $('#cpu'),
 	mem: $('#mem'),
-	db_change: $('#db_change'),
-	list_of_docs: $('#list_of_docs')
+	db_change: $('#db_change')
 };
 
 socket.on('update', function (data) {
@@ -14,15 +13,9 @@ socket.on('update', function (data) {
 			UI.cpu.html( data.cpu + "% CPU Usage.");
 			UI.mem.html( data.mem + '% MEM Usage.');
 		}
-		socket.emit('update', { time: 1000 });
+		socket.emit('update', { time: default_time });
 	}
 });
-socket.on('saveToDB', function (status, docs) {
-	UI.db_change.html('Saved with error equal to \'' + status + '\'');
-	if (docs) {
-		$.each(docs, function (i, doc) {
-			$(df).append( $('<li>').text(doc) );
-		});
-		UI.list_of_docs.append(UI.df);
-	}
+socket.on('saveToDB', function (error) {
+	UI.db_change.html('Saved with error equal to \'' + (error || null) + '\'');
 });

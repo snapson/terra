@@ -44,22 +44,19 @@ app.get('/', function (req, res) {
 server.listen( app.get('port') );
 
 io.on('connection', function (socket) {
-  socket.emit('update', { time: false });
+  socket.emit('update', {});
   socket.on('update', function (data) {
     var timer, calc;
     if (data && data.time) {
       timer = setTimeout(function () {
         calc = sysUsage.calculate();
         socket.emit('update', calc);
-        worker.save(calc, function (status, docs) {
-          socket.emit('saveToDB', { 
-            status: status,
-            docs: docs
-          });
+        worker.save(calc, function (message) {
+          socket.emit('saveToDB', message);
         });
       }, data.time);
     } else {
-      timer = null;
+      clearTimeout(timer);
     }
   });
 });
