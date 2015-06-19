@@ -1,2 +1,2 @@
 # terra
-Get summary information about memory and cpu usage
+Get summary info about memory and cpu usage
