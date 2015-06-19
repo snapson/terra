@@ -2,7 +2,7 @@ var Server = require('mongodb').Server,
     MongoClient = require('mongodb').MongoClient,
     assert = require('assert'),
     moment = require('moment'),
-    url = 'mongodb://nick:nick@localhost:27017/terra',
+    url = 'mongodb://nick:nick@ds039291.mongolab.com:39291/heroku_c6z290vc',
     worker = module.exports = {
       _connect: function (data, next) {
         var that = this;
