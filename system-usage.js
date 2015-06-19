@@ -1,6 +1,6 @@
 var os = require("os");
 var sysUsage = module.exports = {
-  _getCurrentCPU: function () {
+  getCurrentCPU: function (next) {
     var totalIdle = 0, totalTick = 0;
     var cpus = os.cpus();
     var response;
@@ -13,28 +13,25 @@ var sysUsage = module.exports = {
 
       totalIdle += cpu.times.idle;
     }
-
-    response = { idle: totalIdle / cpus.length,  total: totalTick / cpus.length };
-    
-    this.start = this.start || response;
-
-    return response;
+    next({ idle: totalIdle / cpus.length,  total: totalTick / cpus.length });
   },
-  _getCPU: function () {
-    var endMeasure = this._getCurrentCPU(); 
-    var idleDifference = endMeasure.idle - this.start.idle;
-    var totalDifference = endMeasure.total - this.start.total;
-    var percentageCPU = 100 - ~~(100 * idleDifference / totalDifference);
+  _getCPU: function (startMeasure, next) {
+    this.getCurrentCPU(function (endMeasure) {
+      var idleDifference = endMeasure.idle - startMeasure.idle;
+      var totalDifference = endMeasure.total - startMeasure.total;
+      var percentageCPU = 100 - ~~(100 * idleDifference / totalDifference);
 
-    return percentageCPU;
+      next(percentageCPU);
+    });
   },
   _getMEM: function () {
     return +(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2);
   },
-  calculate: function () {
-    return { 
-      cpu: this._getCPU(),
-      mem: this._getMEM()
-    }
+  calculate: function (startMeasure, next) {
+    var that = this;
+
+    that._getCPU(startMeasure, function (cpu) {
+      next({ cpu: cpu, mem: that._getMEM() });
+    });
   }
 }

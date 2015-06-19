@@ -48,16 +48,19 @@ server.listen( app.get('port') );
 io.on('connection', function (socket) {
   socket.emit('update', {});
   socket.on('update', function (data) {
-    var timer, calc;
+    var timer;
     if (data && data.time) {
-      timer = setTimeout(function () {
-        calc = sysUsage.calculate();
-        socket.emit('update', calc);
-        worker.save(calc, function (message) {
-          socket.emit('saveToDB', message);
-          clearTimeout(timer);
-        });
-      }, data.time);
+      sysUsage.getCurrentCPU(function (cpu) {
+        timer = setTimeout(function () {
+          sysUsage.calculate(cpu, function (usage) {
+            socket.emit('update', usage);
+            worker.save(usage, function (message) {
+              socket.emit('saveToDB', message);
+              clearTimeout(timer);
+            });
+          });
+        }, data.time);
+      });
     } else {
       clearTimeout(timer);
     }
