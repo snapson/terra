@@ -1,4 +1,4 @@
-var os = require("os");
+var os = require('os');
 var sysUsage = module.exports = {
   getCurrentCPU: function (next) {
     var totalIdle = 0, totalTick = 0;
