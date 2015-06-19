@@ -29,7 +29,7 @@ var sysUsage = module.exports = {
     return percentageCPU;
   },
   _getMEM: function () {
-    return (process.memoryUsage().rss / os.totalmem() * 100).toFixed(2);
+    return +(process.memoryUsage().rss / os.totalmem() * 100).toFixed(2);
   },
   calculate: function () {
     return { 

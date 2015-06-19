@@ -20,7 +20,7 @@ var Server = require('mongodb').Server,
       },
       _insert: function (data, db, next) {
         var collection = db.collection('usage');
-        collection.insert([{ date: new Date(), cpu: data.cpu, mem: data.mem }], function (err, result) {
+        collection.insert([{ creation_at: new Date(), cpu: data.cpu, mem: data.mem }], function (err, result) {
           assert.equal(err, null);
           assert.equal(1, result.result.n);
           assert.equal(1, result.ops.length);
@@ -29,21 +29,85 @@ var Server = require('mongodb').Server,
       },
       _removeOldDoc: function (db, next) {
         db.collection('usage', function (err, collection) {
-          collection.find({}, { sort: {_id: 1}, limit: 1}).toArray(function (err, doc) {
-            var moments = {
-              current: moment(),
-              last_date: moment(doc[0].date)
-            };
-            var diff = moments.current.diff(moments.last_date, 'hours');
-            // console.log('The diff is ', diff);
-            if (diff >= 24) { // Older than 24 hours
-              collection.remove({ date: doc[0].date }, function(err, response) {
-                assert.equal(null, err);
-                assert.equal(1, response.result.n);
-                // console.log('%s document has been removed!', response.result.n);
-                next(err);
-              });
-            } else { next(); }
+          assert.equal(null, err);
+          var duration = moment.duration(24, 'hours');
+          var diff = moment().subtract(duration, 'milliseconds');
+          var date = new Date(diff.toISOString());
+
+          if (date) {
+            collection.remove({ creation_at: { $lte: date}}, function (err, response) {
+              assert.equal(null, err);
+              // console.log('%s document has been removed!', response.result.n);
+              next(err);
+            });
+          }
+        });
+      },
+      getSummary: function (next) {
+        MongoClient.connect(url, function (err, db) {
+          assert.equal(null, err);
+          db.collection('usage', function (err, collection) {
+            assert.equal(null, err);
+            var diff = new Date(1970,1,1).getMilliseconds();
+
+            collection.aggregate([
+              {
+                $group: {
+                  '_id': {
+                    $subtract: [
+                      { $subtract: [ '$creation_at', diff ] },
+                      { $mod: [
+                        { $subtract: [ '$creation_at', new Date(1970,1,1) ] },
+                        1000 * 60 * 60
+                      ]}
+                    ]
+                  },
+                  'minCpu': { $min: '$cpu' },
+                  'maxCpu': { $max: '$cpu' },
+                  'avgCpu': { $avg: '$cpu' },
+                  'minMem': { $min: '$mem' },
+                  'maxMem': { $max: '$mem' },
+                  'avgMem': { $avg: '$mem' }
+                }
+              },
+              {
+                $sort: { '_id': -1 }
+              },
+              {
+                $project: {
+                  _id: 0,
+                  'interval': '$_id',
+                  'cpu.min': '$minCpu',
+                  'cpu.max': '$maxCpu',
+                  'cpu.avg': {
+                    $divide: [
+                      {
+                        $subtract: [
+                          { $multiply: ['$avgCpu', 10] },
+                          { $mod:[{ $multiply:['$avgCpu',10] }, 1]}
+                        ]
+                      }, 10
+                    ]
+                  },
+                  'memory.min': '$minMem',
+                  'memory.max': '$maxMem',
+                  'memory.avg': {
+                    $divide: [
+                      {
+                        $subtract: [
+                          { $multiply: ['$avgMem', 10] },
+                          { $mod:[{ $multiply:['$avgMem',10] }, 1]}
+                        ]
+                      }, 10
+                    ]
+                  }
+                }
+              }
+            ], function (err, result) {
+              assert.equal(null, err);
+              next(err, result);
+              db.close();
+            });
           });
         });
       },
