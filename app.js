@@ -11,7 +11,7 @@ var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var os = require('os'); 
 
-app.set('port', process.env.PORT || 5353);
+app.set('port', process.env.PORT || 5000);
 app.set('views', path.resolve(__dirname, 'views'));
 app.set('public', path.resolve(__dirname, 'public'));
 app.set('json spaces', 4);
@@ -43,7 +43,10 @@ app.get('/summary', function (req, res) {
     });
   });
 
-server.listen( app.get('port') );
+io.configure(function () {
+  io.set('transports', ['xhr-polling']);
+  io.set('polling duration', 10);
+});
 
 io.on('connection', function (socket) {
   socket.emit('update', {});
@@ -66,3 +69,5 @@ io.on('connection', function (socket) {
     }
   });
 });
+
+server.listen( app.get('port') );
