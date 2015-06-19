@@ -1,15 +1,14 @@
 
 var sysUsage = require('./system-usage');
 var worker = require('./worker');
+var WebSocketServer = require('ws').Server;
 var express = require('express')
 var jade = require('jade');
+var http = require('http');
 var path = require('path');
 var bodyParser = require('body-parser');
 var app = express();
-// IO
-var server = require('http').Server(app);
-var io = require('socket.io')(server);
-var os = require('os'); 
+var server = http.createServer(app);
 
 app.set('port', process.env.PORT || 5000);
 app.set('views', path.resolve(__dirname, 'views'));
@@ -43,22 +42,20 @@ app.get('/summary', function (req, res) {
     });
   });
 
-io.configure(function () {
-  io.set('transports', ['xhr-polling']);
-  io.set('polling duration', 10);
-});
+server.listen( app.get('port') );
 
+var wss = new WebSocketServer({server: server});
 io.on('connection', function (socket) {
-  socket.emit('update', {});
+  socket.send('update', {});
   socket.on('update', function (data) {
     var timer;
     if (data && data.time) {
       sysUsage.getCurrentCPU(function (cpu) {
         timer = setTimeout(function () {
           sysUsage.calculate(cpu, function (usage) {
-            socket.emit('update', usage);
+            socket.send('update', usage);
             worker.save(usage, function (message) {
-              socket.emit('saveToDB', message);
+              socket.send('saveToDB', message);
               clearTimeout(timer);
             });
           });
@@ -69,5 +66,3 @@ io.on('connection', function (socket) {
     }
   });
 });
-
-server.listen( app.get('port') );
