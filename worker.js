@@ -24,7 +24,6 @@ var Server = require('mongodb').Server,
           assert.equal(err, null);
           assert.equal(1, result.result.n);
           assert.equal(1, result.ops.length);
-          console.log('saved', result.result.n);
           next(err, collection);
         });
       },
@@ -38,7 +37,6 @@ var Server = require('mongodb').Server,
           if (date) {
             collection.remove({ creation_at: { $lte: date}}, function (err, response) {
               assert.equal(null, err);
-              // console.log('%s document has been removed!', response.result.n);
               next(err);
             });
           }
