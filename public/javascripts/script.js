@@ -1,5 +1,5 @@
 var socket = io.connect('http://localhost:5353');
-var default_time = 1000;// 30000;
+var default_time = 30000;
 var UI = {
 	df: document.createDocumentFragment(),
 	cpu: $('#cpu'),
