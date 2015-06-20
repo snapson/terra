@@ -1,15 +1,14 @@
 
 var sysUsage = require('./system-usage');
 var worker = require('./worker');
-var WebSocketServer = require('ws').Server;
 var express = require('express')
 var jade = require('jade');
 var http = require('http');
 var path = require('path');
 var bodyParser = require('body-parser');
 var app = express();
-var server = http.createServer(app);
 var refreshTime = 30000;
+var timer;
 
 app.set('port', process.env.PORT || 5000);
 app.set('views', path.resolve(__dirname, 'views'));
@@ -31,37 +30,35 @@ app.use(function (req, res, next){
 });
 
 app.get('/', function (req, res) {
+  worker.getLast(function (item) {
+    clearInterval(timer);
+    timer = false;
+
     res.send( jade.renderFile(path.resolve(app.get('views'), 'index.jade'), 
-      { title: 'Get usage of system' })
+      {
+        title: 'Get usage of system',
+        usage: { cpu: item.cpu, mem: item.mem }
+      })
     );
   });
-
-app.get('/summary', function (req, res) {
-    worker.getSummary(function (err, summary) {
-      if (err) res.json({error: err });
-      res.json({response: summary });
-    });
-  });
-
-server.listen( app.get('port') );
-
-var wss = new WebSocketServer({server: server});
-wss.on('connection', function (ws) {
-  var timer;
-  ws.on('message', function (message) {
-    sysUsage.getCurrentCPU(function (cpu) {
-      timer = setTimeout(function () {
-        sysUsage.calculate(cpu, function (usage) {
-          worker.save(usage, function (message) {
-            ws.send(JSON.stringify({ usage: usage, message: message }));
-            clearTimeout(timer);
-          });
+});
+app.post('/', function (req, res) {
+  sysUsage.getCurrentCPU(function (cpu) {
+    timer = timer || setInterval(function () {
+      sysUsage.calculate(cpu, function (usage) {
+        worker.save(usage, function (message) {
+          console.log('Successfully saved!');
         });
-      }, refreshTime);
-    });  
-  });
-
-  ws.on('close', function () {
-    clearTimeout(timer);
+      });
+    }, refreshTime);
   });
 });
+
+app.get('/summary', function (req, res) {
+  worker.getSummary(function (err, summary) {
+    if (err) res.json({ error: err });
+    res.json({ response: summary });
+  });
+});
+
+app.listen( app.get('port') );

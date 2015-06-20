@@ -110,6 +110,18 @@ var Server = require('mongodb').Server,
           });
         });
       },
+      getLast: function (next) {
+        MongoClient.connect(url, function (err, db) {
+          assert.equal(null, err);
+          db.collection('usage', function (err, collection) {
+            assert.equal(null, err);
+            collection.find({}, { sort: { creation_at: -1 }, limit: 1 }).toArray(function (err, items) {
+              assert.equal(null, err);
+              next(items[0]);
+            });
+          });
+        });
+      },
       save: function (data, next) {
         this._connect(data, next);
       }

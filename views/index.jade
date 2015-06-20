@@ -3,10 +3,8 @@ extends layout
 block content
 	h1= title
 	p Welcome to #{title} heroku application
-	h3#cpu Here will be CPU usage for 30 sec.
-	h3#mem Here will be MEM usage for 30 sec.
-	h6#db_change
+	h3#cpu Using #{usage.cpu}% of CPU.
+	h3#mem Using #{usage.mem}% of Memory.
 	
 
-	| <script src="/javascripts/jquery-2.1.4.min.js"></script>
 	| <script src="/javascripts/script.js"></script>

@@ -16,8 +16,7 @@
     "express": "~4.12.4",
     "jade": "~1.9.2",
     "moment": "^2.10.3",
-    "mongodb": "~2.0",
-    "ws": "0.4.x"
+    "mongodb": "~2.0"
   },
   "scripts": {
     "start": "node app.js"
