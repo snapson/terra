@@ -7,6 +7,7 @@ var UI = {
 };
 
 ws.onmesage = function (response) {
+	console.log('get from js', response);
 	if (response) {
 		if (response.usage.cpu && response.usage.mem) {
 			UI.cpu.html( response.usage.cpu + "% CPU Usage.");

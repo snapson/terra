@@ -47,11 +47,13 @@ server.listen( app.get('port') );
 
 var wss = new WebSocketServer({server: server});
 wss.on('connection', function (ws) {
+  console.log('connect from node');
   var timer;
   sysUsage.getCurrentCPU(function (cpu) {
     timer = setTimeout(function () {
       sysUsage.calculate(cpu, function (usage) {
         worker.save(usage, function (message) {
+          console.log('send from node');
           ws.send({usage: usage, message: message});
           clearTimeout(timer);
         });
