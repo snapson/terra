@@ -6,13 +6,20 @@ var UI = {
 	db_change: $('#db_change')
 };
 
-ws.onmesage = function (response) {
-	console.log('get from js', response);
-	if (response) {
-		if (response.usage.cpu && response.usage.mem) {
-			UI.cpu.html( response.usage.cpu + "% CPU Usage.");
-			UI.mem.html( response.usage.mem + '% MEM Usage.');
+$(document).ready(function () {
+	console.log('rup application');
+	ws.send('run');
+	ws.onmesage = process_message;
+});
+
+function process_message (resp) {
+	console.log('get from js', resp);
+	if (resp) {
+		if (resp.usage.cpu && resp.usage.mem) {
+			UI.cpu.html( resp.usage.cpu + "% CPU Usage.");
+			UI.mem.html( resp.usage.mem + '% MEM Usage.');
 		}
-		UI.db_change.html('Saved with error equal to \'' + (response.message || null) + '\'');
+		UI.db_change.html('Saved with error equal to \'' + (resp.message || null) + '\'');
+		ws.send('update');
 	}
 }

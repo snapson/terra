@@ -24,6 +24,7 @@ var Server = require('mongodb').Server,
           assert.equal(err, null);
           assert.equal(1, result.result.n);
           assert.equal(1, result.ops.length);
+          console.log('saved', result.result.n);
           next(err, collection);
         });
       },
