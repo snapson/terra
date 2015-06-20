@@ -1,21 +1,17 @@
-var socket = io.connect('http://localhost:5353');
-var default_time = 30000;
+var host = location.origin.replace(/^http/, 'ws')
+var ws = new WebSocket(host);
 var UI = {
-	df: document.createDocumentFragment(),
 	cpu: $('#cpu'),
 	mem: $('#mem'),
 	db_change: $('#db_change')
 };
 
-socket.on('update', function (data) {
-	if (data) {
-		if (data.cpu && data.mem) {
-			UI.cpu.html( data.cpu + "% CPU Usage.");
-			UI.mem.html( data.mem + '% MEM Usage.');
+ws.onmesage = function (response) {
+	if (response) {
+		if (response.usage.cpu && response.usage.mem) {
+			UI.cpu.html( response.usage.cpu + "% CPU Usage.");
+			UI.mem.html( response.usage.mem + '% MEM Usage.');
 		}
-		socket.emit('update', { time: default_time });
+		UI.db_change.html('Saved with error equal to \'' + (response.message || null) + '\'');
 	}
-});
-socket.on('saveToDB', function (error) {
-	UI.db_change.html('Saved with error equal to \'' + (error || null) + '\'');
-});
+}

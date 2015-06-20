@@ -9,6 +9,7 @@ var path = require('path');
 var bodyParser = require('body-parser');
 var app = express();
 var server = http.createServer(app);
+var refreshTime = 30000;
 
 app.set('port', process.env.PORT || 5000);
 app.set('views', path.resolve(__dirname, 'views'));
@@ -45,24 +46,20 @@ app.get('/summary', function (req, res) {
 server.listen( app.get('port') );
 
 var wss = new WebSocketServer({server: server});
-io.on('connection', function (socket) {
-  socket.send('update', {});
-  socket.on('update', function (data) {
-    var timer;
-    if (data && data.time) {
-      sysUsage.getCurrentCPU(function (cpu) {
-        timer = setTimeout(function () {
-          sysUsage.calculate(cpu, function (usage) {
-            socket.send('update', usage);
-            worker.save(usage, function (message) {
-              socket.send('saveToDB', message);
-              clearTimeout(timer);
-            });
-          });
-        }, data.time);
+wss.on('connection', function (ws) {
+  var timer;
+  sysUsage.getCurrentCPU(function (cpu) {
+    timer = setTimeout(function () {
+      sysUsage.calculate(cpu, function (usage) {
+        worker.save(usage, function (message) {
+          ws.send({usage: usage, message: message});
+          clearTimeout(timer);
+        });
       });
-    } else {
-      clearTimeout(timer);
-    }
+    }, );
+  });
+
+  ws.on('close', function () {
+    clearTimeout(timer);
   });
 });
