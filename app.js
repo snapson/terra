@@ -56,7 +56,7 @@ wss.on('connection', function (ws) {
           clearTimeout(timer);
         });
       });
-    }, );
+    }, refreshTime);
   });
 
   ws.on('close', function () {
