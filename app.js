@@ -1,4 +1,5 @@
 
+var newrelic = require('newrelic');
 var sysUsage = require('./system-usage');
 var worker = require('./worker');
 var express = require('express')
