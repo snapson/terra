@@ -10,7 +10,7 @@ var app = express();
 var refreshTime = 30000;
 var timer;
 
-app.set('port', process.env.PORT || 5000);
+app.set('port', process.env.PORT || 3000);
 app.set('views', path.resolve(__dirname, 'views'));
 app.set('public', path.resolve(__dirname, 'public'));
 app.set('json spaces', 4);
@@ -61,4 +61,6 @@ app.get('/summary', function (req, res) {
   });
 });
 
-app.listen( app.get('port') );
+app.listen(app.get('port'), function () {
+  console.log('Listening on port: ', app.get('port'));
+});
